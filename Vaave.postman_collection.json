@@ -1,0 +1,94 @@
+{
+	"info": {
+		"_postman_id": "0a67c30e-85ee-4f37-9215-03116de416c6",
+		"name": "Vaave",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27449408"
+	},
+	"item": [
+		{
+			"name": "questions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/questions.php?topic=Sports",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"questions.php"
+					],
+					"query": [
+						{
+							"key": "topic",
+							"value": "Sports"
+						},
+						{
+							"key": "topic",
+							"value": "Arts",
+							"disabled": true
+						},
+						{
+							"key": "topic",
+							"value": "Science & Technology",
+							"disabled": true
+						},
+						{
+							"key": "topic",
+							"value": "Politics",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "topics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/topics.php",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "submit",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"answers\": {\n        \"1\": 2,\n        \"2\": 5,\n        \"3\": 12,\n        \"4\": 13,\n        \"5\": 18,\n        \"6\": 22,\n        \"7\": 28,\n        \"8\": 30,\n        \"9\": 34,\n        \"10\": 39\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8000/submit.php",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"submit.php"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
