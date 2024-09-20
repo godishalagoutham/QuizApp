@@ -1,53 +1,12 @@
-<template>
-    <div class="headerTag">
-        <h1>Welcome, {{ username }} </h1>
-        <div class="topic-card">
-            <button @click="handleLogout">Logout</button>
-        </div>
-    </div>
-    <div class="quiz-container">
-
-        <div v-if="!selectedTopic" class="topic-selection">
-            <h1 class="selectTopicText">Select a topic of your choice</h1>
-            <div v-for="topic in topics" :key="topic.id" class="topic-card">
-                <button @click="selectTopic(topic.name)">{{ topic.name }}</button>
-            </div>
-        </div>
-
-
-        <div v-if="currentQuestion">
-            <div class="question-card">
-
-                <div class="question-text">
-                    <p>{{ currentQuestion.question }}</p>
-                </div>
-                <div class="options-container">
-                    <div v-for="option in currentOptions" :key="option.answer_id"
-                        @click="handleAnswer(option.answer_id)" class="option-card">
-
-                        <input type="radio" :id="'option-' + option.answer_id" :value="option.answer_id"
-                            v-model="userAnswer" />
-                        <label :for="'option-' + option.answer_id">{{ option.answer }}</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div v-if="showResults" class="modal-overlay">
-            <div class="modal-content">
-                <h2>Your Results</h2>
-                <p>Your score is: {{ score }}</p>
-                <button @click="resetQuiz">Close</button>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script>
+
+import RedirectPage from '@/components/RedirectPage.vue';
 import axios from 'axios';
 
 export default {
+    components: {
+        RedirectPage
+    },
     data() {
         return {
             quizData: null,
@@ -65,6 +24,10 @@ export default {
         };
     },
     methods: {
+        redirectToLogin() {
+            window.location.href = 'http://localhost:5173/';
+        },
+
         fetchUserInfo() {
             console.log('getuserinfo')
             fetch('http://localhost:8000/getUserInfo.php', {
@@ -117,16 +80,25 @@ export default {
             if (levelData && this.currentQuestionIndex < levelData.length) {
                 this.currentQuestion = levelData[this.currentQuestionIndex];
                 this.currentOptions = this.currentQuestion.answers;
+                this.userAnswer = this.userAnswers[this.currentQuestion.id] || null;
             } else {
                 this.moveToNextLevel();
             }
         },
         handleAnswer(answerId) {
-
             this.userAnswers[this.currentQuestion.id] = answerId;
+            this.userAnswer = answerId;
+        },
+        nextQuestion() {
             this.currentQuestionIndex++;
-            this.userAnswer = null;
             this.loadQuestion();
+        },
+
+        previousQuestion() {
+            if (this.currentQuestionIndex > 0) {
+                this.currentQuestionIndex--;
+                this.loadQuestion();
+            }
         },
         moveToNextLevel() {
             const levels = Object.keys(this.quizData);
@@ -162,12 +134,26 @@ export default {
             console.log("logout");
 
 
-            axios.post('http://localhost:8000/logout.php', { logout: true })
+            axios.post('http://localhost:8000/logout.php', {
+                logout: true
+            }, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(response => {
-                    console.log(response);
-                    window.location.href = 'http://localhost:5173/';
+                    console.log(response)
+                    if (response) {
 
+                        if (response.data.redirect) {
+                            window.location.href = response.data.redirect;
+
+                        }
+                        //window.location.href = 'http://localhost:5173/';
+                    }
                 })
+
                 .catch(error => {
                     console.error("Error logging out:", error);
                 });
@@ -180,6 +166,68 @@ export default {
     }
 };
 </script>
+
+<template>
+    <div v-if="username">
+        <div class="headerTag">
+            <h1>Welcome, {{ username }} </h1>
+            <div class="topic-card">
+                <button @click="handleLogout">Logout</button>
+            </div>
+        </div>
+        <div class="quiz-container">
+
+            <div v-if="!selectedTopic" class="topic-selection">
+                <h1 class="selectTopicText">Select a topic of your choice</h1>
+                <div v-for="topic in topics" :key="topic.id" class="topic-card">
+                    <button @click="selectTopic(topic.name)">{{ topic.name }}</button>
+                </div>
+            </div>
+
+
+            <div v-if="currentQuestion">
+                <div class="question-card">
+
+                    <div class="question-text">
+                        <p>{{ currentQuestion.question }}</p>
+                    </div>
+                    <div class="options-container">
+                        <div v-for="option in currentOptions" :key="option.answer_id"
+                            @click="handleAnswer(option.answer_id)" class="option-card">
+
+                            <input type="radio" :id="'option-' + option.answer_id" :value="option.answer_id"
+                                v-model="userAnswer" />
+                            <label :for="'option-' + option.answer_id">{{ option.answer }}</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="nav-button" @click="previousQuestion" :disabled="currentQuestionIndex === 0">Back</button>
+                    <button class="nav-button" @click="nextQuestion" :disabled="!userAnswer">
+                        {{ currentQuestionIndex >= (quizData[currentLevel].length - 1) ? 'Submit' : 'Next' }}
+                    </button>
+
+                </div>
+
+
+            </div>
+
+
+            <div v-if="showResults" class="modal-overlay">
+                <div class="modal-content">
+                    <h2>Your Results</h2>
+                    <p>Your score is: {{ score }}</p>
+                    <button @click="resetQuiz">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div v-else>
+        <RedirectPage />
+    </div>
+</template>
+
+
 
 <style scoped>
 .quiz-container {
@@ -211,28 +259,23 @@ export default {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 600px;
-    /* Fixed width for the question card */
     min-height: 150px;
-    /* Fixed height for the question card */
     margin: 20px 0;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    /* Include padding in width */
+
 }
 
 .question-text {
     margin-bottom: 20px;
     overflow: hidden;
-    /* Hide overflow */
     text-overflow: ellipsis;
-    /* Ellipsis for overflowed text */
     display: -webkit-box;
     -webkit-line-clamp: 3;
-    /* Number of lines to show */
     -webkit-box-orient: vertical;
     max-height: 60px;
-    /* Adjust based on desired height */
+
 }
 
 .options-container {
@@ -280,17 +323,47 @@ export default {
 
 .option-card input[type="radio"] {
     margin-right: 10px;
-    /* Ensure space between radio button and label */
+
 }
 
 .option-card input[type="radio"]:checked+label {
     color: #007bff;
-    /* Change label color when selected */
+
 }
 
 .option-card label {
     display: inline-block;
     vertical-align: middle;
-    /* Align label with radio button */
+
+}
+
+.nav-button{
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.nav-button:hover {
+    background-color: darkgreen;
+}
+
+.nav-button:disabled {
+    background-color: green; 
+    color: darkgray; 
+    cursor: not-allowed; 
+    opacity: 0.6; 
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.navigation-buttons button {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
 }
 </style>
