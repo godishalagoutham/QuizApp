@@ -38,3 +38,14 @@ composer require google/apiclient:^2.0
 
 
 ### Including POSTMAN Collection Vaave.postman_collection.json
+
+
+
+### References 
+	•	Google OAuth: Google API PHP Client
+	•	VueJS Documentation: VueJS
+	•	PHP PDO Documentation: PHP PDO and ChatGPT
+
+
+
+
